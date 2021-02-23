@@ -4,6 +4,7 @@
             [notespace-sicmutils.setup]
             [sicmutils.env]
             [sicmutils.env :as e]
+            [aerial.hanami.common :as hanami-common]
             [aerial.hanami.templates :as hanami-templates]))
 
 ^kind/hidden
@@ -66,6 +67,8 @@ let us require some namespaces of the libraries we will be using."]
      (up 'θ_0 'φ_0)
      (up 'θdot_0 'φdot_0)))
 
+["**TODO**: Figure out why sometimes this does not render properly on Github Pages. Locally, it seems ok."]
+
 ["## Step 2: simulation"]
 
 (def step 0.01)
@@ -73,26 +76,33 @@ let us require some namespaces of the libraries we will be using."]
 
 ["We are following generateme's [animation example](https://github.com/Clojure2D/clojure2d-examples/blob/master/src/ex28_double_pendulum.clj) in converting the polar coordinates to rectangular ones."]
 
-(defonce double-pendulum-data
+(defn run! [l1 l2 step horizon]
+  (let [collector (atom
+                   (transient []))]
+    (double-pendulum/evolver
+     {:dt step
+      :t horizon
+      :l1 l1
+      :l2 l2
+      :observe (fn [t state]
+                 (let [q     (nth state 1)
+                       theta (nth q 0)
+                       phi   (nth q 1)
+                       x1 (* l1 (fastmath/sin theta))
+                       y1 (- (* l1 (fastmath/cos theta)))
+                       x2 (+ x1 (* l2 (fastmath/sin phi)))
+                       y2 (- y1 (* l2 (fastmath/cos phi)))
+                       m  {:t t
+                           :phi phi :theta theta
+                           :posx1 x1 :posy1 y1
+                           :posx2 x2 :posy2 y2}]
+                   (swap! collector conj! m)))})
+    (persistent! @collector)))
+
+(def double-pendulum-data
   (let [l1 0.5
         l2 0.5]
-    (->> (range step horizon step)
-         (pmap (fn [t]
-                 (double-pendulum/evolver
-                  {:t t
-                   :l1 l1
-                   :l2 l2})))
-         (map (fn [[t [theta phi] _]]
-                (let [posx1 (* l1 (fastmath/sin theta))
-                      posy1 (- (* l1 (fastmath/cos theta)))
-                      posx2 (+ posx1 (* l2 (fastmath/sin phi)))
-                      posy2 (- posy1 (* l2 (fastmath/cos phi)))]
-                  {:t   t
-                   :posx1 posx1
-                   :posy1 posy1
-                   :posx2 posx2
-                   :posy2 posy2}))))))
-
+    (run! l1 l2 step horizon)))
 
 ^kind/dataset
 (-> double-pendulum-data
@@ -144,7 +154,30 @@ let us require some namespaces of the libraries we will be using."]
 
 [Hanami](https://github.com/jsa-aerial/hanami)'s templates allow us to create a [Vega-Lite](https://vega.github.io/vega-lite/) spec for visualizing our data."]
 
-(def vega-spec
+
+^kind/vega
+(hanami-common/xform
+ hanami-templates/line-chart
+ :DATA double-pendulum-data
+ :X :t
+ :Y :theta)
+
+^kind/vega
+(hanami-common/xform
+ hanami-templates/line-chart
+ :DATA double-pendulum-data
+ :X :t
+ :Y :phi)
+
+^kind/vega
+(hanami-common/xform
+ hanami-templates/point-chart
+ :DATA double-pendulum-data
+ :X :theta
+ :Y :phi
+ :COLOR {:field :t :type :quantitative})
+
+(def animation-spec
   (hanami-common/xform
    hanami-templates/layer-chart
    :LAYER [(hanami-common/xform
@@ -171,17 +204,44 @@ let us require some namespaces of the libraries we will be using."]
                                   :value 1}
                       :value     0})]))
 
-["Let us look at the generated spec. You see, it is not too complicated. We could also write it by hand."]
+^kind/vega
+animation-spec
 
-^kind/hiccup
-[:div
- [:p/frisk vega-spec]]
-
-["Now, let us render it."]
+["Let us attach to this animation plot a couple of simpler points, linked by UI."]
 
 ^kind/vega
-vega-spec
+(hanami-common/xform
+ hanami-templates/vconcat-chart
+ :VCONCAT [(hanami-common/xform
+            hanami-templates/hconcat-chart
+            :HCONCAT [animation-spec
+                      ^kind/vega
+                      (hanami-common/xform
+                       hanami-templates/point-chart
+                       :DATA double-pendulum-data
+                       :X :theta
+                       :Y :phi
+                       :SIZE {:condition {:test  "abs(selected_t - datum['t']) < 0.00001"
+                                          :value 200}
+                              :value     5})])
+           (hanami-common/xform
+            hanami-templates/hconcat-chart
+            :HCONCAT [(hanami-common/xform
+                       hanami-templates/point-chart
+                       :DATA double-pendulum-data
+                       :X :t
+                       :Y :theta
+                       :SIZE {:condition {:test  "abs(selected_t - datum['t']) < 0.00001"
+                                          :value 200}
+                              :value     5})
+                      (hanami-common/xform
+                       hanami-templates/point-chart
+                       :DATA double-pendulum-data
+                       :X :t
+                       :Y :phi
+                       :SIZE {:condition {:test  "abs(selected_t - datum['t']) < 0.00001"
+                                          :value 200}
+                              :value     5})])])
 
-["Please play with the slider to see the pendula play together."]
 
 ["."]
