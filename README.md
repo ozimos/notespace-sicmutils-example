@@ -6,7 +6,7 @@ An example of using Notespace to write Sicmutils notes
 
 Follows the instruction at [the doulbe pendulum example code](./src/notespace_sicmutils_example/double_pendulum.clj)'s comment block.
 
-You can see it [rendered as static html](https://scicloj.github.io/notespace-sicmutils-example/docs/notespace-sicmutils-example/double-pendulum).
+You can see it [rendered as static html](https://sritchie.github.io/notespace-sicmutils-example/docs/notespace-sicmutils-example/double-pendulum).
 
 ## License
 
