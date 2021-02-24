@@ -87,7 +87,7 @@ coordinate transform!"]
 ((L-double-pendulum 'm_1 'm_2 'l_1 'l_2 'g)
  (up 't
      (up 'theta_1 'theta_2)
-     (up 'theta_1dot 'theta_2dot)))
+     (up 'thetadot_1 'thetadot_2)))
 
 ["## Simulation"]
 
