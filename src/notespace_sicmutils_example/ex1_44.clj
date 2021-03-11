@@ -15,7 +15,6 @@
 
   ;; evaluate all notes in this namespace, and update the browser view:
   (notespace/eval-this-notespace)
-
   ;; Rendering current browser view into a static html file (under the `docs` directory):
   (notespace/render-static-html))
 
@@ -43,10 +42,10 @@ Lagrangian with the familiar form of `T - V`."]
 (defn angles->rect [l1 l2]
   (fn [[t [theta1 theta2]]]
     (let [x1 (* l1 (sin theta1))
-	        y1 (- (* l1 (cos theta1)))
+          y1 (- (* l1 (cos theta1)))
           x2 (+ x1 (* l2 (sin (+ theta1 theta2))))
-	        y2 (- y1 (* l2 (cos (+ theta1 theta2))))]
-	    (up x1 y1 x2 y2))))
+          y2 (- y1 (* l2 (cos (+ theta1 theta2))))]
+      (up x1 y1 x2 y2))))
 
 ["`T` describes the sum of the kinetic energy of two particles in rectangular
 coordinates."]
@@ -55,7 +54,7 @@ coordinates."]
   (fn [[_ _ [xdot1 ydot1 xdot2 ydot2]]]
     (+ (* (/ 1 2) m1 (+ (square xdot1)
                         (square ydot1)))
-	     (* (/ 1 2) m2 (+ (square xdot2)
+       (* (/ 1 2) m2 (+ (square xdot2)
                         (square ydot2))))))
 
 ["`V` describes a uniform gravitational potential with coefficient `g`, acting
@@ -84,10 +83,10 @@ coordinate transform!"]
 
 ["The Lagrangian is big and hairy:"]
 
-((L-double-pendulum 'm_1 'm_2 'l_1 'l_2 'g)
- (up 't
-     (up 'theta_1 'theta_2)
-     (up 'thetadot_1 'thetadot_2)))
+  ((L-double-pendulum 'm_1 'm_2 'l_1 'l_2 'g)
+   (up 't
+       (up 'theta_1 'theta_2)
+       (up 'thetadot_1 'thetadot_2)))
 
 ["## Simulation"]
 
@@ -368,7 +367,7 @@ pendulum bob itself as it evolves through time."]
 ["And again for the regular initial condition:"]
 
 ^kind/vega
-(plot-spec regular-data)
+(system-inspector regular-data)
 
 ["### Generalized coordinates, velocities
 
@@ -404,9 +403,9 @@ No visualizations here yet, but the code works well."]
 (defn L-double-double-pendulum [m1 m2 l1 l2 g]
   (fn [[t [thetas1 thetas2] [qdots1 qdots2]]]
     (let [s1 (up t thetas1 qdots1)
-	        s2 (up t thetas2 qdots2)]
-	    (+ ((L-double-pendulum m1 m2 l1 l2 g) s1)
-	       ((L-double-pendulum m1 m2 l1 l2 g) s2)))))
+          s2 (up t thetas2 qdots2)]
+      (+ ((L-double-pendulum m1 m2 l1 l2 g) s1)
+         ((L-double-pendulum m1 m2 l1 l2 g) s2)))))
 
 (def dd-state-derivative
   (compose
@@ -424,8 +423,8 @@ No visualizations here yet, but the code works well."]
       (safe-log
        (Math/abs
         (pv
-				 (- (nth thetas1 1)
-				    (nth thetas2 1))))))))
+         (- (nth thetas1 1)
+            (nth thetas2 1))))))))
 
 (defn run-double-double!
   "Two different initializations, slightly kicked"
@@ -433,8 +432,8 @@ No visualizations here yet, but the code works well."]
   (let [initial-q2    (+ initial-q1 (up 0.0 1e-10))
         initial-qdot  (up 0.0 0.0)
         initial-state (up 0.0
-		                      (up initial-q1 initial-q2)
-		                      (up initial-qdot initial-qdot))
+                          (up initial-q1 initial-q2)
+                          (up initial-qdot initial-qdot))
         collector     (atom (transient []))]
     ((e/evolve dd-state-derivative m1 m2 l1 l2 g)
      initial-state
@@ -461,3 +460,12 @@ No visualizations here yet, but the code works well."]
 ["Peek at the final state:"]
 
 (last raw-dd-regular-data)
+
+
+
+(comment
+  (defn  parametric-path-action [Lagrangian t0 q0 t1 q1]
+    (fn [intermediate-qs])
+    (let [path (make-path t0 q0 t1 q1 intermediate-qs)]
+
+      (Lagrangian-action Lagrangian path t0 t1))))
